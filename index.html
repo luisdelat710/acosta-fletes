@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freight Dispatch Workflow — Portfolio Demo</title>
+<style>
+  :root{
+    --naranja:#ED762F;
+    --negro:#1e2327;
+    --gris:#f4f6f8;
+    --nissan:#2c7be5;
+    --ford:#27ae60;
+    --fletera:#8e44ad;
+    --rojo:#e74c3c;
+    --borde:#e2e5e9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--gris); color:#222;
+  }
+  header.top{
+    background:var(--negro); color:#fff; padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  header.top .brand{display:flex; align-items:center; gap:12px;}
+  header.top img{height:38px; border-radius:4px;}
+  header.top .brand-text{line-height:1.25;}
+  header.top .brand-text strong{font-size:1rem; display:block;}
+  header.top .brand-text span{font-size:.75rem; color:#bbb;}
+  header.top .role-switch{display:flex; align-items:center; gap:8px; font-size:.8rem;}
+  header.top select{
+    background:#2b3238; color:#fff; border:1px solid #444; border-radius:6px; padding:6px 8px; font-size:.8rem;
+  }
+  .banner{
+    background:#fff8ec; border-bottom:1px solid #f1dcb8; color:#7a5b1e; font-size:.78rem;
+    padding:8px 20px; text-align:center;
+  }
+  main{max-width:1180px; margin:0 auto; padding:20px;}
+  .grid{display:grid; grid-template-columns:380px 1fr; gap:20px;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+  .card{background:#fff; border:1px solid var(--borde); border-radius:12px; padding:18px; margin-bottom:18px;}
+  .card h2{margin:0 0 14px 0; font-size:1rem; text-transform:uppercase; letter-spacing:.03em; color:var(--negro); display:flex; align-items:center; gap:8px;}
+  .card h2 .dot{width:8px; height:8px; border-radius:50%; background:var(--naranja); display:inline-block;}
+  label{display:block; font-size:.72rem; font-weight:700; color:#666; margin:10px 0 4px;}
+  label:first-child{margin-top:0;}
+  input,select,textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--borde); border-radius:7px; font-size:.85rem; font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:50px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .unidad-box{
+    margin-top:14px; padding:12px; border-radius:8px; font-weight:800; font-size:.85rem; text-align:center;
+    background:#eee; color:#333; transition:.2s;
+  }
+  button{
+    cursor:pointer; border:none; border-radius:7px; font-weight:700; font-size:.82rem; padding:10px 14px;
+    font-family:inherit;
+  }
+  .btn-primary{background:var(--naranja); color:#fff; width:100%; margin-top:14px; padding:12px;}
+  .btn-primary:disabled{opacity:.5; cursor:not-allowed;}
+  .btn-ghost{background:var(--gris); color:#333; border:1px solid var(--borde);}
+  .btn-small{padding:6px 10px; font-size:.7rem; border-radius:6px;}
+  table{width:100%; border-collapse:collapse; font-size:.8rem;}
+  th{
+    text-align:left; font-size:.68rem; text-transform:uppercase; color:#888; padding:8px 6px;
+    border-bottom:2px solid var(--borde);
+  }
+  td{padding:9px 6px; border-bottom:1px solid #f0f0f0; vertical-align:top;}
+  .status-dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px;}
+  .unit-pill{font-size:.68rem; font-weight:800; padding:3px 8px; border-radius:20px; color:#fff; display:inline-block;}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;}
+  .toolbar input{width:220px;}
+  .empty{color:#999; font-size:.8rem; text-align:center; padding:30px 0;}
+  .toast{
+    position:fixed; top:16px; right:16px; background:var(--negro); color:#fff; padding:12px 18px; border-radius:8px;
+    font-size:.82rem; box-shadow:0 8px 24px rgba(0,0,0,.2); z-index:999; opacity:0; transform:translateY(-8px);
+    transition:.25s; max-width:320px;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:16px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff; border-radius:12px; padding:24px; max-width:440px; width:100%;}
+  .modal h3{margin:0 0 8px 0; font-size:1.05rem;}
+  .modal p{font-size:.85rem; color:#444; line-height:1.5;}
+  .modal .actions{display:flex; gap:10px; margin-top:16px;}
+  .modal .actions button{flex:1;}
+  .footer-note{font-size:.72rem; color:#999; text-align:center; margin-top:24px; line-height:1.6;}
+  .footer-note a{color:var(--naranja);}
+  .badge{font-size:.65rem; padding:2px 7px; border-radius:20px; font-weight:800; text-transform:uppercase;}
+  .badge.ok{background:#eafaf1; color:#1e8449;}
+  .badge.pend{background:#fdf2e3; color:#b9770e;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <img src="assets/logo.jpg" alt="Pisos y Azulejos Acosta">
+    <div class="brand-text">
+      <strong>Freight Dispatch Workflow</strong>
+      <span>Portfolio demo — sanitized recreation</span>
+    </div>
+  </div>
+  <div class="role-switch">
+    Rol de vista:
+    <select id="roleSelect">
+      <option value="1">Almacén</option>
+      <option value="2" selected>Logística</option>
+      <option value="3">Gerencia</option>
+    </select>
+  </div>
+</header>
+
+<div class="banner">
+  Demo pública con datos simulados. No contiene información real de clientes, choferes ni operaciones. Todo se guarda solo en tu navegador (localStorage).
+</div>
+
+<main>
+  <div class="grid">
+    <!-- FORM -->
+    <div>
+      <div class="card">
+        <h2><span class="dot"></span>Programar Ruta</h2>
+        <form id="orderForm">
+          <label>Folio</label>
+          <input id="f_folio" placeholder="Ej: F-1042" required>
+
+          <label>Cliente</label>
+          <input id="f_cliente" placeholder="Nombre del cliente" required>
+
+          <div class="row2">
+            <div>
+              <label>Teléfono</label>
+              <input id="f_telefono" placeholder="Opcional">
+            </div>
+            <div>
+              <label>Operador</label>
+              <input id="f_operador" placeholder="Chofer asignado">
+            </div>
+          </div>
+
+          <label>Dirección</label>
+          <textarea id="f_direccion" placeholder="Punto de entrega"></textarea>
+
+          <div class="row2">
+            <div>
+              <label>Peso (kg)</label>
+              <input id="f_peso" type="number" min="0" step="0.1" placeholder="Ej: 850" required>
+            </div>
+            <div>
+              <label>Tipo de envío</label>
+              <select id="f_tipo">
+                <option value="interno">Interno (flotilla propia)</option>
+                <option value="fletera">Fletera externa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label>Fecha</label>
+              <input id="f_fecha" type="date" required>
+            </div>
+            <div>
+              <label>Hora</label>
+              <input id="f_hora" type="time" required>
+            </div>
+          </div>
+
+          <label>Alcance</label>
+          <select id="f_alcance">
+            <option value="Local">Local</option>
+            <option value="Foráneo">Foráneo</option>
+          </select>
+
+          <label>Comentarios</label>
+          <textarea id="f_comentarios" placeholder="Opcional"></textarea>
+
+          <div id="unidadBox" class="unidad-box">Ingresa el peso para calcular la unidad sugerida</div>
+
+          <button type="submit" class="btn-primary" id="submitBtn">Guardar Ruta</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>Regla de asignación</h2>
+        <p style="font-size:.78rem; color:#555; line-height:1.6; margin:0;">
+          Envío interno con <strong>peso ≤ 1,230 kg → Nissan NP300</strong>.
+          Peso mayor a 1,230 kg → <strong>Ford F-450</strong>.
+          Envío marcado como fletera externa → siempre <strong>Fletera externa</strong>, sin importar el peso.
+        </p>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div>
+      <div class="card">
+        <h2><span class="dot"></span>Rutas Programadas</h2>
+        <div class="toolbar">
+          <input id="searchBox" placeholder="Buscar folio o cliente...">
+          <button class="btn-ghost btn-small" id="exportCsv">Exportar CSV</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Folio / Cliente</th>
+                <th>Fecha / Hora</th>
+                <th>Unidad</th>
+                <th>Estatus</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="empty" style="display:none;">Sin rutas programadas todavía.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Recreación de portafolio del sistema real de despacho de Pisos y Azulejos Acosta. Reglas de negocio, lógica de
+    consolidación y flujo de estatus son fieles al sistema operativo; los datos que captures aquí son solo de
+    demostración y viven únicamente en tu navegador.<br>
+    <a href="../README.md">Ver README del proyecto</a>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="consolModal">
+  <div class="modal">
+    <h3>💡 Optimización de ruta sugerida</h3>
+    <p id="consolText"></p>
+    <div class="actions">
+      <button class="btn-ghost" id="consolNo">No, mantener separadas</button>
+      <button class="btn-primary" style="margin:0;" id="consolYes">Sí, juntar en Ford F-450</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'acosta_fletes_demo_v1';
+const STATUS_FLOW = ['Programado', 'En ruta', 'Entregado'];
+const STATUS_COLORS = { 'Programado':'#e67e22', 'En ruta':'#2c7be5', 'Entregado':'#27ae60' };
+
+function loadOrders(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function saveOrders(list){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function role(){ return document.getElementById('roleSelect').value; }
+function unitColor(u){
+  if(u === 'Ford F-450') return 'var(--ford)';
+  if(u === 'Nissan NP300') return 'var(--nissan)';
+  return 'var(--fletera)';
+}
+
+// --- Vehicle assignment rule ---
+function suggestUnit(peso, tipo){
+  if(tipo === 'fletera') return 'Fletera externa';
+  return peso <= 1230 ? 'Nissan NP300' : 'Ford F-450';
+}
+
+function refreshUnitBox(){
+  const peso = parseFloat(document.getElementById('f_peso').value) || 0;
+  const tipo = document.getElementById('f_tipo').value;
+  const box = document.getElementById('unidadBox');
+  if(!document.getElementById('f_peso').value){
+    box.textContent = 'Ingresa el peso para calcular la unidad sugerida';
+    box.style.background = '#eee'; box.style.color = '#333';
+    return null;
+  }
+  const u = suggestUnit(peso, tipo);
+  box.textContent = '🚚 Unidad sugerida: ' + u;
+  box.style.background = unitColor(u);
+  box.style.color = '#fff';
+  return u;
+}
+document.getElementById('f_peso').addEventListener('input', refreshUnitBox);
+document.getElementById('f_tipo').addEventListener('change', refreshUnitBox);
+
+// --- Consolidation advisory ---
+// If two Nissan NP300 orders share date + alcance, are within 120 min, and combined
+// weight exceeds 1200 kg, suggest merging them into a Ford F-450.
+function findConsolidationCandidate(newOrder, allOrders){
+  if(newOrder.unidad !== 'Nissan NP300') return null;
+  const [nh, nm] = newOrder.hora.split(':').map(Number);
+  const newMinutes = nh*60+nm;
+  return allOrders.find(o=>{
+    if(o.id === newOrder.id) return false;
+    if(o.fecha !== newOrder.fecha) return false;
+    if(o.alcance !== newOrder.alcance) return false;
+    if(o.unidad !== 'Nissan NP300') return false;
+    const [oh, om] = o.hora.split(':').map(Number);
+    const oMinutes = oh*60+om;
+    if(Math.abs(oMinutes - newMinutes) > 120) return false;
+    if((o.peso + newOrder.peso) <= 1200) return false;
+    return true;
+  }) || null;
+}
+
+let pendingConsolidation = null;
+
+document.getElementById('orderForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const peso = parseFloat(document.getElementById('f_peso').value) || 0;
+  const tipo = document.getElementById('f_tipo').value;
+  const unidad = suggestUnit(peso, tipo);
+
+  const order = {
+    id: Date.now(),
+    folio: document.getElementById('f_folio').value.toUpperCase(),
+    cliente: document.getElementById('f_cliente').value,
+    telefono: document.getElementById('f_telefono').value,
+    operador: document.getElementById('f_operador').value,
+    direccion: document.getElementById('f_direccion').value,
+    comentarios: document.getElementById('f_comentarios').value,
+    peso, tipo,
+    fecha: document.getElementById('f_fecha').value,
+    hora: document.getElementById('f_hora').value,
+    alcance: document.getElementById('f_alcance').value,
+    unidad,
+    estatusIdx: 0,
+  };
+
+  const orders = loadOrders();
+  const candidate = findConsolidationCandidate(order, orders);
+
+  orders.push(order);
+  saveOrders(orders);
+  renderOrders();
+  document.getElementById('orderForm').reset();
+  refreshUnitBox();
+
+  if(candidate){
+    pendingConsolidation = { newId: order.id, candidateId: candidate.id };
+    document.getElementById('consolText').innerHTML =
+      `El pedido <strong>${order.folio}</strong> y el folio <strong>${candidate.folio}</strong> están programados casi ` +
+      `a la misma hora y van a la misma zona (<strong>${order.alcance}</strong>). Juntos suman ` +
+      `<strong>${(order.peso+candidate.peso).toFixed(1)} kg</strong>. ¿Deseas consolidarlos en la Ford F-450?`;
+    document.getElementById('consolModal').classList.add('show');
+  } else {
+    toast('Ruta guardada — ' + unidad);
+  }
+});
+
+document.getElementById('consolYes').addEventListener('click', function(){
+  if(!pendingConsolidation) return;
+  const orders = loadOrders().map(o=>{
+    if(o.id === pendingConsolidation.newId || o.id === pendingConsolidation.candidateId){
+      return {...o, unidad:'Ford F-450'};
+    }
+    return o;
+  });
+  saveOrders(orders);
+  renderOrders();
+  document.getElementById('consolModal').classList.remove('show');
+  toast('🚛 Rutas consolidadas en Ford F-450');
+  pendingConsolidation = null;
+});
+document.getElementById('consolNo').addEventListener('click', function(){
+  document.getElementById('consolModal').classList.remove('show');
+  toast('Rutas mantenidas por separado');
+  pendingConsolidation = null;
+});
+
+function advanceStatus(id){
+  const orders = loadOrders().map(o=>{
+    if(o.id === id){
+      const next = Math.min(o.estatusIdx+1, STATUS_FLOW.length-1);
+      return {...o, estatusIdx: next};
+    }
+    return o;
+  });
+  saveOrders(orders);
+  renderOrders();
+}
+function deleteOrder(id){
+  saveOrders(loadOrders().filter(o=>o.id !== id));
+  renderOrders();
+  toast('Ruta eliminada');
+}
+
+function renderOrders(){
+  const q = (document.getElementById('searchBox').value || '').toLowerCase();
+  const orders = loadOrders()
+    .filter(o => o.folio.toLowerCase().includes(q) || o.cliente.toLowerCase().includes(q))
+    .sort((a,b)=> (a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+
+  const body = document.getElementById('ordersBody');
+  const r = role();
+  body.innerHTML = '';
+
+  if(orders.length === 0){
+    document.getElementById('emptyState').style.display = 'block';
+  } else {
+    document.getElementById('emptyState').style.display = 'none';
+  }
+
+  orders.forEach(o=>{
+    const status = STATUS_FLOW[o.estatusIdx];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <strong>${o.folio}</strong><br>
+        <span style="color:#555;">${o.cliente}</span>
+      </td>
+      <td>${o.hora}<br><small style="color:#999;">${o.fecha}</small></td>
+      <td><span class="unit-pill" style="background:${unitColor(o.unidad)}">${o.unidad}</span></td>
+      <td><span class="status-dot" style="background:${STATUS_COLORS[status]}"></span>${status}</td>
+      <td id="actions-${o.id}"></td>
+    `;
+    body.appendChild(tr);
+    const actionsCell = tr.querySelector(`#actions-${o.id}`);
+
+    if((r === '1' || r === '3') && o.estatusIdx < STATUS_FLOW.length-1){
+      const b = document.createElement('button');
+      b.className = 'btn-ghost btn-small';
+      b.style.marginRight = '6px';
+      b.textContent = 'Avanzar estatus';
+      b.onclick = ()=>advanceStatus(o.id);
+      actionsCell.appendChild(b);
+    }
+    if(r === '3'){
+      const d = document.createElement('button');
+      d.className = 'btn-ghost btn-small';
+      d.style.color = 'var(--rojo)';
+      d.textContent = 'Eliminar';
+      d.onclick = ()=>deleteOrder(o.id);
+      actionsCell.appendChild(d);
+    }
+  });
+}
+
+document.getElementById('roleSelect').addEventListener('change', renderOrders);
+document.getElementById('searchBox').addEventListener('input', renderOrders);
+
+document.getElementById('exportCsv').addEventListener('click', function(){
+  const orders = loadOrders();
+  if(orders.length === 0){ toast('No hay rutas para exportar'); return; }
+  const header = ['Folio','Cliente','Telefono','Operador','Direccion','Peso_kg','Fecha','Hora','Alcance','Unidad','Estatus'];
+  const rows = orders.map(o=>[
+    o.folio,o.cliente,o.telefono,o.operador,
+    (o.direccion||'').replace(/\n/g,' '),
+    o.peso,o.fecha,o.hora,o.alcance,o.unidad,STATUS_FLOW[o.estatusIdx]
+  ]);
+  const csv = [header, ...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'rutas_acosta_demo.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Init
+(function(){
+  const today = new Date();
+  document.getElementById('f_fecha').value = today.toISOString().split('T')[0];
+  refreshUnitBox();
+  renderOrders();
+})();
+</script>
+</body>
+</html>
